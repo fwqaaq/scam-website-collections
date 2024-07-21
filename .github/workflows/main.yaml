@@ -1,0 +1,29 @@
+name: Automated shell script
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    name: handle scam repo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Install content-farm-terminator
+        run: |
+          gh repo clone https://github.com/danny0838/content-farm-terminator -- --depth=1 -b gh-pages
+          ./index.sh
+        env:
+          GH_TOKEN: ${{github.token}}
+      - name: Commit changes to scam branch
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHuab Actions"
+          git checkout -b scam
+          git add scam-sites.txt
+          git commit -m "auto build at $(TZ=UTC date +'%F'T'%T'Z)"
+          git push -f origin scam
